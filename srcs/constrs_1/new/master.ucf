@@ -1,0 +1,4 @@
+CONFIG PART = xc6vlx240tff1156-1;
+
+########## ML605 Board ##########
+NET "RESET" LOC = H10 | IOSTANDARD = LVCMOS15 | TIG; 

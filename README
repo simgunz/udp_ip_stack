@@ -1,0 +1,81 @@
+QUICK START
+The quick start guide can be used with the ML605 board
+
+QUICK START with PLANAHEAD:
+1) Create a new PlanAhead EMPTY project and close it
+2) Do not add anything before step 3
+3) Copy the content of srcs in a new folder named PROJECTNAME.srcs in the PlanAhead
+   project root (Copy the PROJECTNAME from the existing PROJECNAME.data folder)
+4) From srcs/constrs_1/imports/ remove the files that do not match your board
+5) From srcs/sources_1/ip/ remove the folders that do not match your board
+6) From srcs/sources_1/imports/udp_ip_stack/ remove the folders that do not match your board
+7) Copy the content of data to the corresponding folder in the PlanAhead project root
+8) Remove all the files that do not match your board from the data subfolders
+9) Remove the board suffix to all the files in the data subfolders (resulting name must be fileset.xml, overwrite the existing files)
+10) Import the udp.vhd top module
+11) Edit the udp.vhd template module to match your needs (it can be used as a top module or as a component of another top module)
+
+10a) Import the udp_benchmark.vhd top module
+11a) Use the included Qt software to test the board ethernet speed
+
+QUICK START GENERIC:
+1) From srcs/constrs_1/imports/ remove the files that do not match your board
+2) From srcs/sources_1/ip/ remove the folders that do not match your board
+3) From srcs/sources_1/imports/udp_ip_stack/ remove the folders that do not match your board 
+4) Import all the files in srcs to a new project
+5) Import the udp.vhd top module
+6) Edit the udp.vhd template module to match your needs (it can be used as a top module or as a component of another top module)
+
+5a) Import the udp_benchmark.vhd top module
+6a) Use the included Qt software to test the board ethernet speed
+
+
+##################
+
+The UDP/IP stack can work on different Xilinx board, but for each board an appropriate Ethernet mac layer must be generated.
+For the ML605 and for the Virtex5$$$ the ethernet MAC layer is provided in this project, so you just need to add it to your project
+(you may want to regenerate it if a newer version of the MAC has been released). 
+
+HOWTO:
+1) Generate the newest version of the Embedded Tri-Mode Ethernet MAC Wrapper IPcore for the desired board
+   e.g. for the ML605 board the last available is the 2.3 version (with AXI interface).
+2) Customize the IPcore as follow:   
+     PHY interface: GMII
+     Speed 1000Mbps
+     Management Interface: Disabled
+     Address filter: Disabled
+     Statistic Counters: Disabled
+   Note:
+     -10/100/1000 speed may work as well, but I've never tried, probably some new signal to choose the speed
+      must be appropriately drived
+     -1000Mbps speed require all the devices in the network to support this speed, otherwise will be
+      impossible to communicate to the FPGA. So only Gigabit routers are allowed!
+3) Generate the output products of the Ipcore (I'm referring to PlanAhead).
+4) You should manually add to the project the following files located in
+   PROJECTNAME.srcs/sources_1/ip/v6_emac_v2_3_0/v6_emac_v2_3_0/example_design/
+   (here I'm referring to the Virtex 6 Ethernet MAC, but should be similar for other platform).
+   
+   -clk_wiz.vhd
+   -v6_emac_v2_3_0_block.vhd
+   -v6_emac_v2_3_0_fifo_block.vhd
+   -common/reset_sync.vhd
+   -common/sync_block.vhd
+   -fifo/rx_client_fifo_8.vhd
+   -fifo/ten_100_1g_eth_fifo.vhd
+   -fifo/tx_client_fifo_8.vhd
+   -physical/gmii_if.vhd
+
+5) In the same folder there is the file
+   
+   -v6_emac_v2_3_0_example_design.vhd
+   
+   Replace the "_example_design" suffix from the file name and from all the strings in it with the suffix "_wrapper".
+   Using a diff tool like meld compare it to the "v6_emac_v2_3_0_wrapper.vhd" file provided with this project
+   and edit it in order to add/remove the part which differs.
+   In particular the interface must match the one of the template file "v6_emac_v2_3_0_wrapper.vhd" or
+   it won't match the UDP_Complete.vhd component declaration.
+   Add it to the project.
+6) Add the content of v6_emac_v2_3_0_example_design.ucf to the master ucf file, not everything is needed (such as display, or push buttons).
+
+See here for troubleshooting:
+  http://forums.xilinx.com/t5/Timing-Analysis/Constraints-hierarchy/m-p/373023#M4890
