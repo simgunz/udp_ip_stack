@@ -1,15 +1,20 @@
-QUICK START
-The quick start guide can be used with the ML605 board
+This repository contains a copy of the "1G eth UDP / IP Stack" opencores.org project(http://opencores.org/project,udp_ip_stack)
+and add a fully working mac layer for the Virtex 6 ML605 board.
+It also provides the following things:
+-quick start guide to create a PlanAhead project that include the udp/ip/mac module
+-top template file (udp.vhd) that can be edited to quickly make your own application that exploit the udp/ip module
+-benchmark top module (udp_benchmark.vhd)
+-a benchmark Qt software to test the speed and the packet loss of the udp/ip module
 
-QUICK START with PLANAHEAD:
+QUICK START with PLANAHEAD (ML605):
 1) Create a new PlanAhead EMPTY project and close it
 2) Do not add anything before step 3
-3) Copy the content of srcs in a new folder named PROJECTNAME.srcs in the PlanAhead
+3) Copy the content of 'srcs' in a new folder named 'PROJECTNAME.srcs' in the PlanAhead
    project root (Copy the PROJECTNAME from the existing PROJECNAME.data folder)
-4) From srcs/constrs_1/imports/ remove the files that do not match your board
-5) From srcs/sources_1/ip/ remove the folders that do not match your board
-6) From srcs/sources_1/imports/udp_ip_stack/ remove the folders that do not match your board
-7) Copy the content of data to the corresponding folder in the PlanAhead project root
+4) From srcs/constrs_1/imports/ remove the files that do not match your board if any (there are not for now, but in the future more board can be supported)
+5) From srcs/sources_1/ip/ remove the folders that do not match your board  if any (there are not for now, but in the future more board can be supported)
+6) From srcs/sources_1/imports/udp_ip_stack/ remove the folders that do not match your board  if any (there are not for now, but in the future more board can be supported)
+7) Copy the content of 'data' to to the folder named 'PROJECTNAME.data' in the PlanAhead project root 
 8) Remove all the files that do not match your board from the data subfolders
 9) Remove the board suffix to all the files in the data subfolders (resulting name must be fileset.xml, overwrite the existing files)
 10) Import the udp.vhd top module
@@ -18,10 +23,10 @@ QUICK START with PLANAHEAD:
 10a) Import the udp_benchmark.vhd top module
 11a) Use the included Qt software to test the board ethernet speed
 
-QUICK START GENERIC:
-1) From srcs/constrs_1/imports/ remove the files that do not match your board
-2) From srcs/sources_1/ip/ remove the folders that do not match your board
-3) From srcs/sources_1/imports/udp_ip_stack/ remove the folders that do not match your board 
+QUICK START GENERIC (e.g. for ISE):
+1) From srcs/constrs_1/imports/ remove the files that do not match your board if any (there are not for now, but in the future more board can be supported)
+2) From srcs/sources_1/ip/ remove the folders that do not match your board if any (there are not for now, but in the future more board can be supported)
+3) From srcs/sources_1/imports/udp_ip_stack/ remove the folders that do not match your board if any (there are not for now, but in the future more board can be supported)
 4) Import all the files in srcs to a new project
 5) Import the udp.vhd top module
 6) Edit the udp.vhd template module to match your needs (it can be used as a top module or as a component of another top module)
@@ -33,11 +38,11 @@ QUICK START GENERIC:
 ##################
 
 The UDP/IP stack can work on different Xilinx board, but for each board an appropriate Ethernet mac layer must be generated.
-For the ML605 and for the Virtex5$$$ the ethernet MAC layer is provided in this project, so you just need to add it to your project
+For the ML605 the ethernet MAC layer is provided in this project, so you just need to add it to your project
 (you may want to regenerate it if a newer version of the MAC has been released). 
 
-HOWTO:
-1) Generate the newest version of the Embedded Tri-Mode Ethernet MAC Wrapper IPcore for the desired board
+HOWTO (refer to ML605, the MAC can be different on other board):
+1) Generate the newest version of the (Virtex-X) Embedded Tri-Mode Ethernet MAC Wrapper IPcore for the desired board
    e.g. for the ML605 board the last available is the 2.3 version (with AXI interface).
 2) Customize the IPcore as follow:   
      PHY interface: GMII
@@ -76,6 +81,19 @@ HOWTO:
    it won't match the UDP_Complete.vhd component declaration.
    Add it to the project.
 6) Add the content of v6_emac_v2_3_0_example_design.ucf to the master ucf file, not everything is needed (such as display, or push buttons).
-
-See here for troubleshooting:
-  http://forums.xilinx.com/t5/Timing-Analysis/Constraints-hierarchy/m-p/373023#M4890
+   
+   Change the line
+     NET "gtx_clk_bufg" TNM_NET = "ref_gtx_clk";
+   to
+     NET "*mac_block?gtx_clk_bufg" TNM_NET = "ref_gtx_clk";
+     
+   Change the line
+     TIMESPEC "TS_clock_path_gtx2ref" = FROM "TS_clock_generator_clkout0" TO "TS_clock_generator_clkout2" TIG;
+   to
+     TIMESPEC "TS_clock_path_gtx2ref" = FROM "TS_UDP_block_mac_block_clock_generator_clkout0" TO "TS_UDP_block_mac_block_clock_generator_clkout2" TIG;
+     
+   This last line still generate some problems because PlanAhead analize it before the Translate phase and since does not find the two time spec
+   (that are generated in the translate phase) it disables it. So a critical warning will be shown.
+   
+   See here for troubleshooting:
+     http://forums.xilinx.com/t5/Timing-Analysis/Constraints-hierarchy/m-p/373023#M4890
